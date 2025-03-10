@@ -23,7 +23,7 @@ class FASTOEWSurrogate(om.ExplicitComponent):
         self.add_input('SLS_Thrust',units='N')
 
         # model output
-        self.add_output('OEW',units='kg') # this is really airframe weight not oew
+        self.add_output('OEW',units='kg')
 
         # partial derivatives
         self.declare_partials('*','*', method = 'fd') # change later, actually have the partials for these (very easy to calculate)
