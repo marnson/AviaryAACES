@@ -11,7 +11,7 @@ class FASTOEWSurrogate(om.ExplicitComponent):
     # Read in FAST data sets, which will be used for a Gaussian process regression
     # These were precomputed using FAST for a single OEW regression
     def _read_data_from_mat_files(self):
-        RegressionData   = scipy.io.loadmat('marnson/RegressionData.mat')
+        RegressionData   = scipy.io.loadmat('marnson/custom_models/mass/RegressionData.mat')
 
         # Values stored in the .mat file
         self.DataMatrix  = RegressionData['DataMatrix' ]

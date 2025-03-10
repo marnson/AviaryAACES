@@ -8,6 +8,9 @@ Here we have climb, cruise, and descent phases.
 We then call the correct methods in order to set up and run an Aviary optimization problem.
 This performs a coupled design-mission optimization and outputs the results from Aviary into the `reports` folder.
 
+This is just the standard aviary example but with a custom OEW prediction used instead. this reduces the number of inputs that are required while also lowering fidelity
+-max arnson
+
 """
 import sys
 import os
