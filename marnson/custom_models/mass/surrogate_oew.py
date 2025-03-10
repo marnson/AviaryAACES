@@ -13,7 +13,7 @@ class FASTOEWSurrogate(om.ExplicitComponent):
     def setup(self):
 
         # run the helperfunction to initialize the fast inputs from the files
-        self.setup_fast_inputs()
+        self.read_data_from_mat_files()
 
         # model inputs
         self.add_input('PropulsionWeight',units='kg')
@@ -31,7 +31,7 @@ class FASTOEWSurrogate(om.ExplicitComponent):
 
     # Read in FAST data sets, which will be used for a Gaussian process regression
     # These were precomputed using FAST for a single OEW regression
-    def setup_fast_inputs(self):
+    def read_data_from_mat_files(self):
         RegressionData   = scipy.io.loadmat('marnson/RegressionData.mat')
 
         # Values stored in the .mat file
