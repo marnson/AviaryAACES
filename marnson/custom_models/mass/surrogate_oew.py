@@ -7,13 +7,27 @@ import scipy.io
 from aviary.api import SubsystemBuilderBase, Aircraft, Mission
 
 class FASTOEWSurrogate(om.ExplicitComponent):
+
+    # Read in FAST data sets, which will be used for a Gaussian process regression
+    # These were precomputed using FAST for a single OEW regression
+    def _read_data_from_mat_files(self):
+        RegressionData   = scipy.io.loadmat('marnson/RegressionData.mat')
+
+        # Values stored in the .mat file
+        self.DataMatrix  = RegressionData['DataMatrix' ]
+        self.HyperParams = RegressionData['HyperParams']
+        self.InverseTerm = RegressionData['InverseTerm']
+        self.Mu0         = RegressionData['Mu0'        ]
+
+        # Ybar is just the airframe data from the datamatrix
+        self.Ybar        = self.DataMatrix[:,-1]
     
     # setup input variables for the Gaussian process regression
     # TODO: add OpenMDAO or aviary variable paths here 
     def setup(self):
 
         # run the helperfunction to initialize the fast inputs from the files
-        self.read_data_from_mat_files()
+        self._read_data_from_mat_files()
 
         # model inputs
         self.add_input('PropulsionWeight',units='kg')
@@ -27,21 +41,6 @@ class FASTOEWSurrogate(om.ExplicitComponent):
 
         # partial derivatives
         self.declare_partials('*','*', method = 'fd') # change later, actually have the partials for these (very easy to calculate)
-
-
-    # Read in FAST data sets, which will be used for a Gaussian process regression
-    # These were precomputed using FAST for a single OEW regression
-    def read_data_from_mat_files(self):
-        RegressionData   = scipy.io.loadmat('marnson/RegressionData.mat')
-
-        # Values stored in the .mat file
-        self.DataMatrix  = RegressionData['DataMatrix' ]
-        self.HyperParams = RegressionData['HyperParams']
-        self.InverseTerm = RegressionData['InverseTerm']
-        self.Mu0         = RegressionData['Mu0'        ]
-
-        # Ybar is just the airframe data from the datamatrix
-        self.Ybar        = self.DataMatrix[:,-1]
 
 
     def compute(self,inputs,outputs):
