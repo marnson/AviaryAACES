@@ -1,8 +1,10 @@
 import openmdao.api as om
 import numpy as np
-import pandas as pd
 import scipy.io
 
+
+# from marnson.fast_oew_surrogate import FASTOEWSurrogate
+from aviary.api import SubsystemBuilderBase, Aircraft, Mission
 
 class FASTOEWSurrogate(om.ExplicitComponent):
     
@@ -14,13 +16,14 @@ class FASTOEWSurrogate(om.ExplicitComponent):
         self.setup_fast_inputs()
 
         # model inputs
-        self.add_input('Payload')
-        self.add_input('Range')
-        self.add_input('MTOW')
-        self.add_input('SLS_Thrust')
+        self.add_input('PropulsionWeight',units='kg')
+        self.add_input('Payload',units='kg')
+        self.add_input('Range',units='m')
+        self.add_input('MTOW',units='kg')
+        self.add_input('SLS_Thrust',units='N')
 
         # model output
-        self.add_output('OEW_Minus_Engines') # this is really airframe weight not oew
+        self.add_output('OEW',units='kg') # this is really airframe weight not oew
 
         # partial derivatives
         self.declare_partials('*','*', method = 'fd') # change later, actually have the partials for these (very easy to calculate)
@@ -60,7 +63,37 @@ class FASTOEWSurrogate(om.ExplicitComponent):
         Posterior = self.Mu0 + Kstarbar @ self.InverseTerm @ np.transpose(self.Ybar - self.Mu0)
 
         # Assign ouput
-        outputs['OEW_Minus_Engines'] = Posterior
+        outputs['OEW'] = Posterior + inputs['PropulsionWeight']
+
+class SurrogateWeightBuilder(SubsystemBuilderBase):
+
+    """
+    
+    subsystem override for the OEW (really oew - propulsion) mass in aviary
+    
+    
+    """
+
+    def __init__(self, name='OEW_minus_propulsion'):
+        super().__init__(name)
+
+    def build_pre_mission(self, aviary_inputs):
+
+        surrogate_oew = om.Group()
+        surrogate_oew.add_subsystem("SurrogateOEW",FASTOEWSurrogate(),
+                                        promotes_inputs=
+                                            [
+                                            ('PropulsionWeight', Aircraft.Propulsion.MASS),
+                                            ('Payload', Aircraft.CrewPayload.TOTAL_PAYLOAD_MASS),
+                                            ('Range', Mission.Design.RANGE),
+                                            ('MTOW', Mission.Design.GROSS_MASS),
+                                            ('SLS_Thrust', Aircraft.Propulsion.TOTAL_SCALED_SLS_THRUST),
+                                            ],
+                                        promotes_outputs= [('OEW', Aircraft.Design.EMPTY_MASS)]
+                                    )
+
+        return surrogate_oew
+    
 
 
 
@@ -68,37 +101,21 @@ class FASTOEWSurrogate(om.ExplicitComponent):
 
 
 
-
-
-
-
-# # testing
+# # component testing
 # if __name__ == '__main__':
 #     prob = om.Problem(reports=None)
 #     prob.model.add_subsystem('oew_surrogate', FASTOEWSurrogate(), promotes=['*'])
 
 #     prob.setup()
+#     prob.set_val('PropulsionWeight', 0)
 #     prob.set_val('Payload', 20000)
 #     prob.set_val('Range', 3e6)
 #     prob.set_val('MTOW', 100e3)
 #     prob.set_val('SLS_Thrust', 100e3)
 
+
     
 #     prob.run_model()
-#     print(prob.get_val('OEW_Minus_Engines'))
+#     print(prob.get_val('OEW'))
 
 
-
-    
-
-
-
-
-        
-
-
-
-
-
-
-        
